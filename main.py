@@ -226,9 +226,12 @@ def login(username: str, password: str) -> (str, requests.session):
     url = "https://support.euserv.com/index.iphp"
     captcha_image_url = "https://support.euserv.com/securimage_show.php"
     session = requests.Session()
-
+       
     sess = session.get(url, headers=headers)
     sess_id = re.findall("PHPSESSID=(\\w{10,100});", str(sess.headers))[0]
+       
+    log("[EUerv]sess_id：" + sess_id)
+
     # visit png
     logo_png_url = "https://support.euserv.com/pic/logo_small.png"
     session.get(logo_png_url, headers=headers)
@@ -473,6 +476,9 @@ if __name__ == "__main__":
     for i in range(len(user_list)):
         print("*" * 30)
         log("[EUserv] 正在续费第 %d 个账号" % (i + 1))
+           
+        log("[EUerv]账号名：" + user_list[i])
+
         sessid, s = login(user_list[i], passwd_list[i])
         if sessid == "-1":
             log("[EUserv] 第 %d 个账号登陆失败，请检查登录信息" % (i + 1))
