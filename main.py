@@ -124,81 +124,6 @@ def login_retry(*args, **kwargs):
     return wrapper
 
 
-def captcha_solver(captcha_image_url: str, session: requests.session) -> dict:
-    """
-    TrueCaptcha API doc: https://apitruecaptcha.org/api
-    Free to use 100 requests per day.
-    """
-    response = session.get(captcha_image_url)
-    encoded_string = base64.b64encode(response.content)
-    url = "https://api.apitruecaptcha.org/one/gettext"
-
-    data = {
-        "userid": TRUECAPTCHA_USERID,
-        "apikey": TRUECAPTCHA_APIKEY,
-        "case": "mixed",
-        "mode": "human",
-        "data": str(encoded_string)[2:-1],
-    }
-    r = requests.post(url=url, json=data)
-    j = json.loads(r.text)
-    return j
-
-
-def handle_captcha_solved_result(solved: dict) -> str:
-    """Since CAPTCHA sometimes appears as a very simple binary arithmetic expression.
-    But since recognition sometimes doesn't show the result of the calculation directly,
-    that's what this function is for.
-    """
-    if "result" in solved:
-        solved_text = solved["result"]
-        if "RESULT  IS" in solved_text:
-            log("[Captcha Solver] You are using the demo apikey.")
-            print("There is no guarantee that demo apikey will work in the future!")
-            # because using demo apikey
-            text = re.findall(r"RESULT  IS . (.*) .", solved_text)[0]
-        else:
-            # using your own apikey
-            log("[Captcha Solver] You are using your own apikey.")
-            text = solved_text
-        operators = ["X", "x", "+", "-"]
-        if any(x in text for x in operators):
-            for operator in operators:
-                operator_pos = text.find(operator)
-                if operator == "x" or operator == "X":
-                    operator = "*"
-                if operator_pos != -1:
-                    left_part = text[:operator_pos]
-                    right_part = text[operator_pos + 1 :]
-                    if left_part.isdigit() and right_part.isdigit():
-                        return eval(
-                            "{left} {operator} {right}".format(
-                                left=left_part, operator=operator, right=right_part
-                            )
-                        )
-                    else:
-                        # Because these symbols("X", "x", "+", "-") do not appear at the same time,
-                        # it just contains an arithmetic symbol.
-                        return text
-        else:
-            return text
-    else:
-        print(solved)
-        raise KeyError("Failed to find parsed results.")
-
-
-def get_captcha_solver_usage() -> dict:
-    url = "https://api.apitruecaptcha.org/one/getusage"
-
-    params = {
-        "username": TRUECAPTCHA_USERID,
-        "apikey": TRUECAPTCHA_APIKEY,
-    }
-    r = requests.get(url=url, params=params)
-    j = json.loads(r.text)
-    return j
-
-
 def get_pin_from_mailparser(url_id: str) -> str:
     """
     response format:
@@ -256,26 +181,13 @@ def login(username: str, password: str) -> (str, requests.session):
         ):
             return "-1", session
         else:
-            log("[Captcha Solver] 进行验证码识别...")
-            solved_result = captcha_solver(captcha_image_url, session)
-            captcha_code = handle_captcha_solved_result(solved_result)
-            log("[Captcha Solver] 识别的验证码是: {}".format(captcha_code))
-
-            if CHECK_CAPTCHA_SOLVER_USAGE:
-                usage = get_captcha_solver_usage()
-                log(
-                    "[Captcha Solver] current date {0} api usage count: {1}".format(
-                        usage[0]["date"], usage[0]["count"]
-                    )
-                )
-
+           
             f2 = session.post(
                 url,
                 headers=headers,
                 data={
                     "subaction": "login",
                     "sess_id": sess_id,
-                    "captcha_code": captcha_code,
                 },
             )
             if (
