@@ -230,11 +230,13 @@ def login(username: str, password: str) -> (str, requests.session):
     sess = session.get(url, headers=headers)
     sess_id = re.findall("PHPSESSID=(\\w{10,100});", str(sess.headers))[0]
        
-    log("[EUerv]sess_id：" + sess_id)
+    log("[EUserv] sess_id：" + sess_id)
 
     # visit png
     logo_png_url = "https://support.euserv.com/pic/logo_small.png"
-    session.get(logo_png_url, headers=headers)
+    sess = session.get(logo_png_url, headers=headers)
+  
+    log("[EUserv] 当前Session：" + sess)   
 
     login_data = {
         "email": username,
@@ -477,7 +479,7 @@ if __name__ == "__main__":
         print("*" * 30)
         log("[EUserv] 正在续费第 %d 个账号" % (i + 1))
            
-        log("[EUerv]账号名：" + user_list[i])
+        log("[EUserv] 账号名：" + user_list[i])
 
         sessid, s = login(user_list[i], passwd_list[i])
         if sessid == "-1":
