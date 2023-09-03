@@ -251,7 +251,9 @@ def login(username: str, password: str) -> (str, requests.session):
     }
     f = session.post(url, headers=headers, data=login_data)
     f.raise_for_status()
-
+       
+    log("[EUserv] 登录结果：" + f.text) 
+       
     if (
         f.text.find("Hello") == -1
         and f.text.find("Confirm or change your customer data here") == -1
