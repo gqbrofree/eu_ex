@@ -236,7 +236,10 @@ def login(username: str, password: str) -> (str, requests.session):
     logo_png_url = "https://support.euserv.com/pic/logo_small.png"
     sess = session.get(logo_png_url, headers=headers)
   
-    log("[EUserv] 当前Session：" + sess)   
+    # 登录url
+    url = "https://support.euserv.com/index.iphp?sess_id=" + sess_id
+       
+    log("[EUserv] 正在登录：" + url) 
 
     login_data = {
         "email": username,
