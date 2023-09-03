@@ -124,17 +124,6 @@ def login_retry(*args, **kwargs):
     return wrapper
 
 def get_pin_from_mailparser(url_id: str) -> str:
-    """
-    response format:
-    [
-      {
-        "id": "83b95f50f6202fb03950afbe00975eab",
-        "received_at": "2021-11-06 02:30:07",  ==> up to mailparser account timezone setting, here is UTC 0000.
-        "processed_at": "2021-11-06 02:30:07",
-        "pin": "123456"
-      }
-    ]
-    """
     response = requests.get(
         f"{MAILPARSER_DOWNLOAD_BASE_URL}{url_id}",
         # Mailparser parsed data download using Basic Authentication.
@@ -174,9 +163,7 @@ def login(username: str, password: str) -> (str, requests.session):
         "sess_id": sess_id,
     }
     f = session.post(url, headers=headers, data=login_data)
-    f.raise_for_status()
-       
-    log("[EUserv] 登录结果：" + f.text) 
+    f.raise_for_status()   
        
     if (
         f.text.find("Hello") == -1
